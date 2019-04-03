@@ -32,7 +32,7 @@ const makeId = ()=>{
 app.post('/note', (req, res)=> {
     const randomKey = makeId();
 
-    const content = req.headers.content;
+    const content = req.headers.Content;
     console.log(randomKey);
     client.get(randomKey, (err, data)=> {
         // data is null if the key doesn't exist
@@ -53,19 +53,15 @@ app.get("/note/:keyy", (req, res) => {
     });
 });
 
-app.get("/notes", async (req, res) => {
-    await client.multi()
-        .keys('*', async (err, replies)=> {
+app.get("/notes", (req, res) => {
+    client.multi()
+        .keys('*', (err, replies)=> {
             console.log("Got " + replies.length + " notes");
-            const resultsArray = [];
-            let result = "";
-            await replies.forEach(async (reply, index)=> {
-                await client.get(reply, async (err, data)=>{
-                    result = index + " - " + reply.toString() + " | content : " + data + "\n";
-                    resultsArray.push(result)
+            replies.forEach((reply, index)=> {
+                client.get(reply, (err, data)=>{
+                     console.log(index + " - " + reply.toString() + " | content : " + data + "\n");
                 });
             });
-            console.log(resultsArray)
         })
         .exec((err, replies)=> {
         });
