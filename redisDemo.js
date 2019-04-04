@@ -1,7 +1,12 @@
 const redis = require('redis');
 const client = redis.createClient();
 const express = require('express');
+const bodyParser = require('body-parser');
 const app = express();
+
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 client.on('connect', () => {
     console.log('Redis client connected');
@@ -29,26 +34,26 @@ const makeId = ()=>{
 };
 
 
-app.post('/note', (req, res)=> {
+app.post('/note/:author', (req, res)=> {
+    const d = new Date();
+    const e = formatDate(d);
     const randomKey = makeId();
+    const content = req.body.content;
+    const author = req.params.author;
+    const creation_date = e;
 
-    const content = req.headers.Content;
-    console.log(randomKey);
-    client.get(randomKey, (err, data)=> {
-        // data is null if the key doesn't exist
-        if (err || data === null) {
-            client.set(randomKey, content, redis.print);
+    client.exists(randomKey, (err, reply)=> {
+        if (!reply) {
+            client.set(randomKey, content + " | author : " + author + " | creation date : " + creation_date, redis.print);
+            console.log(randomKey + " created");
             res.send(randomKey)
-
         } else {
             console.log("already exists")
         }
     });
 });
-
-app.get("/note/:keyy", (req, res) => {
-    client.get(req.params.keyy, (err, data)=> {
-        (data !== null) ? res.send(data): res.send("bad key");
+app.get("/note/:rKey", (req, res) => {
+    client.get(req.params.rKey, (err, data)=> {
         res.send(data !== null ? data : "wrong key");
     });
 });
@@ -59,11 +64,30 @@ app.get("/notes", (req, res) => {
             console.log("Got " + replies.length + " notes");
             replies.forEach((reply, index)=> {
                 client.get(reply, (err, data)=>{
-                     console.log(index + " - " + reply.toString() + " | content : " + data + "\n");
+                    console.log(index + " - " + reply.toString() + " | content : " + data + "\n");
                 });
             });
+            (!err) ? res.send("list logged", 200): res.status(404).send("empty list");
         })
         .exec((err, replies)=> {
         });
 });
+
+app.delete('/notes/:rKey', (req, res)=> {
+    client.del(req.params.rKey, (err, response)=> {
+        res.send((response === 1) ? "Deleted Successfully!": "Cannot delete");
+    });
+});
+
+const formatDate = (date)=> {
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+    let ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    minutes = minutes < 10 ? '0'+minutes : minutes;
+    const strTime = hours + ':' + minutes + ' ' + ampm;
+    return date.getMonth()+1 + "/" + date.getDate() + "/" + date.getFullYear() + "  " + strTime;
+};
+
 
