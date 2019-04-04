@@ -78,6 +78,22 @@ Sortie :
 7 - U9Wgk | content : WAHOUUUUUUUUU | author : auteurrr | creation date : 4/4/2019  10:03 am
 ```
 
+Supprimer une note à l'aide de son ID :
+
+```
+DELETE http://localhost:3000/note/{KEY}
+
+Host: localhost:3000
+Content-type: text/plain
+Content-Length: 0
+```
+
+Sortie : 
+
+```
+Deleted Successfully!
+```
+
 
 ## Fait avec
 
