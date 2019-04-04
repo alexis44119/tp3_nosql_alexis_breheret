@@ -23,7 +23,7 @@ Content: "bee"
 Récupérer une note à l'aide de son ID :
 
 ```
-GET http://localhost:3000/notes/{KEY}
+GET http://localhost:3000/note/{KEY}
 
 Host: localhost:3000
 Content-type: text/plain
